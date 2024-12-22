@@ -1,6 +1,9 @@
+import dotenv from 'dotenv';
+dotenv.config();
 import userModel from "../models/userModels.js"; // User model ko import kar rahe hain jo database se interact karega.
 import bcrypt from "bcrypt"; // Bcrypt ko import kar rahe hain, jo password ko hash karega.
 import jwt from "jsonwebtoken"; // Jsonwebtoken ko import kar rahe hain, jo authentication tokens generate karega.
+import transporter from "../config/nodeMailer.js";
 
 export const register = async (req, res) => {  // Register function jo user registration handle karega.
   const { name, email, password } = req.body;  // Request body se name, email, aur password ko destructure kar rahe hain.
@@ -43,6 +46,25 @@ export const register = async (req, res) => {  // Register function jo user regi
       maxAge: 7 * 24 * 60 * 60 * 1000, // Cookie ko 7 din ke liye valid kar rahe hain.
     });
 
+    //Sending Welcome Email
+
+    const mailOptions = {
+      from:process.env.SENDER_EMAIL,
+      to:email,
+      subject: 'Welcome To Mama BAker`s',
+      text: `Welcome to MAMA BAKER'S . We Provide Delicious Bakery Products Mr. id:  ${email}`
+    }
+
+    try {
+      await transporter.sendMail(mailOptions);
+      console.log('Email sent successfully');
+    } catch (error) {
+      console.error('Error sending email:', error);
+    }
+  
+    
+    
+    
     return res.json({ success: true });  // Successful registration ke baad response bhej rahe hain.
   } catch (error) {
     // Agar koi error hota hai to uska message return kar rahe hain.
