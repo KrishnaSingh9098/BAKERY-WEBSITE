@@ -49,8 +49,8 @@ export const register = async (req, res) => {  // Register function jo user regi
     //Sending Welcome Email
 
     const mailOptions = {
-      from:process.env.SENDER_EMAIL,
-      to:email,
+      from: process.env.SENDER_EMAIL,
+      to: email,
       subject: 'Welcome To Mama BAker`s',
       text: `Welcome to MAMA BAKER'S . We Provide Delicious Bakery Products Mr. id:  ${email}`
     }
@@ -62,7 +62,7 @@ export const register = async (req, res) => {  // Register function jo user regi
       console.error('Error sending email:', error);
     }
   
-    
+    console.log(mailOptions)
     
     
     return res.json({ success: true });  // Successful registration ke baad response bhej rahe hain.
@@ -138,3 +138,88 @@ export const logOut = async (req, res) => {
     }
   };
   
+
+// Sending the verification OTP to the User
+
+export const sendVerifyOtp = async (req, res) => {
+  try {
+    const { userId } = req.body; // Request body se userId le rahe hain
+    const user = await userModel.findById(userId); // User ko database se find kar rahe hain userId ke through
+
+    // Agar user ka account already verify ho chuka hai
+    if (user.isAccountVerified) {
+      return res.json({ success: false, message: "Account already Verified" }); // Agar account verify ho gaya hai to message bhej rahe hain
+    }
+
+    // OTP generate kar rahe hain (6 digit ka random number)
+    const Otp = String(Math.floor(100000 + Math.random() * 900000));
+
+    // User ke OTP aur expiration time ko set kar rahe hain
+    user.verifyOtp = Otp;
+    user.verifyOtpExpiresAt = Date.now() + 24 * 60 * 60 * 1000; // OTP ko 24 hours ke liye valid bana rahe hain
+
+    // User ko save kar rahe hain with new OTP
+    await user.save();
+
+    // OTP email bhejne ke liye mailOptions set kar rahe hain
+    const mailOptions = {
+      from: process.env.SENDER_EMAIL, // Sender ka email
+      to: user.email, // Recipient ka email (user ka email)
+      subject: 'Account Verification OTP', // Email subject
+      text: `Your OTP is ${Otp} . Verify Your account using this OTP.` // Email ka content
+    };
+
+    // OTP email bhej rahe hain
+    await transporter.sendMail(mailOptions);
+
+    // Response bhej rahe hain ki OTP successfully bhej diya gaya hai
+    res.json({ success: true, message: 'Verification OTP has been sent on email' });
+
+  } catch (error) {
+    return res.json({ success: false, message: error.message }); // Agar koi error aata hai to uska message bhej rahe hain
+  }
+}
+
+// Verifying the OTP entered by the user
+
+export const VerifiedEmail = async (req, res) => {
+  const { userId, Otp } = req.body; // Request body se userId aur OTP le rahe hain
+
+  // Agar userId ya OTP missing hai to error message bhej rahe hain
+  if (!userId || !Otp) {
+    return res.json({ success: false, message: `Missing ID: ${userId} or Missing OTP: ${Otp} details` });
+  }
+
+  try {
+    const user = await userModel.findById(userId); // User ko database se find kar rahe hain userId ke through
+
+    // Agar user nahi milta to error bhej rahe hain
+    if (!user) {
+      return res.json({ success: false, message: 'User Not Found' });
+    }
+
+    // Agar user ka OTP blank hai ya jo OTP user ne diya hai wo sahi nahi hai
+    if (user.verifyOtp === '' || user.verifyOtp !== Otp) {
+      return res.json({ success: false, message: 'Invalid OTP' });
+    }
+
+    // Agar OTP expired ho gaya hai
+    if (user.verifyOtpExpiresAt < Date.now()) {
+      return res.json({ success: false, message: 'OTP Expired' });
+    }
+
+    // OTP verification successful, account ko verify kar rahe hain
+    user.isAccountVerified = true; // Account ko verify kar rahe hain
+    user.verifyOtp = ''; // OTP ko clear kar rahe hain
+    user.verifyOtpExpiresAt = 0; // OTP expiration time ko reset kar rahe hain
+
+    // User ko save kar rahe hain updated data ke saath
+    await user.save();
+
+    // Response bhej rahe hain ki email successfully verify ho gaya
+    return res.json({ success: true, message: 'Email verified successfully' });
+
+  } catch (error) {
+    return res.json({ success: false, message: error.message }); // Agar koi error aata hai to uska message bhej rahe hain
+  }
+}
