@@ -4,7 +4,7 @@ const Home = () => {
   return (
     <div>
 
-        <h1>Welcome To The MAMA BAKERS</h1>
+        {/* <h1>Welcome To The MAMA BAKERS</h1> */}
         <Header/>
     </div>
   )
