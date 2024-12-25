@@ -8,12 +8,15 @@ import Orders from './Components/Order';  // Import Orders page
 import Cart from './Components/Cart';  // Import Cart page
 import Profile from './Components/Profile';  // Import Profile page
 import Navbar from './Components/Navbar';
+import { ToastContainer } from 'react-toastify';
+// import 'react-toastify/dist/ReactToastify/.css'
 
 const App = () => {
   return (
     <Router>
       <div>
         <Navbar/>
+        <ToastContainer/>
         <Routes>
           <Route path="/" element={<Home />} /> {/* Home page */}
           <Route path="/login" element={<Login />} /> {/* Login page */}
