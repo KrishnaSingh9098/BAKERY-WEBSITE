@@ -10,7 +10,7 @@ server.post('/logout', logOut);
 server.post('/send-verify-otp', userAuth,sendVerifyOtp);
 server.post('/verify-account', userAuth,VerifiedEmail);
 server.post('/is-auth', userAuth,isAuthenticated);
-server.post('/is-auth',isAuthenticated);
+server.get('/is-auth',isAuthenticated);
 server.post('/send-reset-otp', sendResetOtp);
 server.post('/reset-password', resetPassword);
 

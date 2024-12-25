@@ -1,5 +1,5 @@
 import 'react'
-import { useContext, useState } from 'react'
+import { useContext, useState, useEffect } from 'react'
 import { assets } from '../assets/assets'
 import { useNavigate } from 'react-router-dom'
 import { AppContext } from '../context/AppContext'
@@ -7,7 +7,6 @@ import { toast } from 'react-toastify'
 import axios from 'axios'
 
 const Login = () => {
-
   const [state, setState] = useState('Sign Up')
   const navigate = useNavigate()
 
@@ -15,8 +14,15 @@ const Login = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
-  const { backendUrl, setIsLoggedin } = useContext(AppContext)
-  
+  const { backendUrl, setIsLoggedin, getUserData } = useContext(AppContext)
+
+  // Retrieve stored emails from localStorage on component mount
+  useEffect(() => {
+    const storedEmails = JSON.parse(localStorage.getItem('savedEmails')) || []
+    if (storedEmails.length > 0) {
+      setEmail(storedEmails[0]) // Set the first email as the default (if any)
+    }
+  }, [])
 
   const onSubmitHandler = async (e) => {
     try {
@@ -28,6 +34,7 @@ const Login = () => {
 
         if (data.success) {
           setIsLoggedin(true)
+          getUserData()
           navigate('/')
         } else {
           toast.error(data.message)
@@ -37,14 +44,37 @@ const Login = () => {
 
         if (data.success) {
           setIsLoggedin(true)
-          navigate('/')
+          getUserData()
+
+          // Check if email is verified
+          if (!data.isEmailVerified) {
+            toast.info('Please verify your email before logging in.')
+            navigate('/verify-email') // Redirect to the email verification page
+          } else {
+            navigate('/') // Navigate to the home page if email is verified
+          }
         } else {
           toast.error(data.message)
         }
       }
-    // eslint-disable-next-line no-unused-vars
     } catch (error) {
       toast.error('An error occurred')
+    }
+  }
+
+  // Save email to localStorage when user changes email
+  const handleEmailChange = (e) => {
+    const newEmail = e.target.value
+    setEmail(newEmail)
+
+    // Get previously stored emails from localStorage
+    const savedEmails = JSON.parse(localStorage.getItem('savedEmails')) || []
+
+    // If the email is not already in the list, add it
+    if (!savedEmails.includes(newEmail) && newEmail !== '') {
+      savedEmails.unshift(newEmail) // Add to the beginning
+      // Save updated list to localStorage (only keeping the last 5 emails)
+      localStorage.setItem('savedEmails', JSON.stringify(savedEmails.slice(0, 5)))
     }
   }
 
@@ -82,9 +112,16 @@ const Login = () => {
               placeholder='Enter email'
               required
               className='bg-transparent outline-none w-full text-white'
-              onChange={(e) => setEmail(e.target.value)} // Corrected onChange
+              onChange={handleEmailChange} // Updated onChange for email
               value={email}
+              list="email-suggestions" // HTML5 feature for showing suggestions
             />
+            <datalist id="email-suggestions">
+              {/* Suggest previously entered emails from localStorage */}
+              {JSON.parse(localStorage.getItem('savedEmails') || '[]').map((email, index) => (
+                <option key={index} value={email} />
+              ))}
+            </datalist>
           </div>
 
           {/* Password Input */}

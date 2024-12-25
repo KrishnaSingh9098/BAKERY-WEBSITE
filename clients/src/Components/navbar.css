@@ -80,3 +80,19 @@
   
 
   
+
+  .user-dropdown ul {
+    padding: 0;
+    margin: 0;
+    list-style: none; /* Removes default list bullets */
+  }
+  
+  .user-dropdown li {
+    display: block;  /* Ensures each item is block-level (vertical layout) */
+    white-space: nowrap;  /* Prevents text from wrapping into multiple lines */
+  }
+  
+  .user-dropdown li:hover {
+    background-color: #f0f0f0; /* Optional: Adds hover effect */
+  }
+  
