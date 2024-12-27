@@ -6,6 +6,7 @@ dotenv.config(); // Initialize dotenv to load variables from .env file
 // Middleware to check if the user is authenticated
 const userAuth = async (req, res, next) => {
   const { token } = req.cookies; // Extract token from cookies
+  console.log(token)
 
   if (!token) {
     return res.json({ success: false, message: 'Not Authorized, Login Again' }); // If no token, user is not authorized
