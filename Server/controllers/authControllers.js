@@ -229,49 +229,108 @@ export const sendVerifyOtp = async (req, res) => {
 
 // Verifying the OTP entered by the user
 
+// export const VerifiedEmail = async (req, res) => {
+//   const { userId, Otp } = req.body; // Request body se userId aur OTP le rahe hain
+// console.log(userId,Otp)
+//   // Agar userId ya OTP missing hai to error message bhej rahe hain
+//   if (!userId || !Otp) {
+//     return res.json({ success: false, message: `Missing ID: ${userId} or Missing OTP: ${Otp} details` });
+//   }
+
+//   try {
+//     const user = await userModel.findById(userId); // User ko database se find kar rahe hain userId ke through
+
+//     // Agar user nahi milta to error bhej rahe hain
+//     if (!user) {
+//       return res.json({ success: false, message: 'User Not Found' });
+//     }
+
+//     // Agar user ka OTP blank hai ya jo OTP user ne diya hai wo sahi nahi hai
+//     if (user.verifyOtp === '' || user.verifyOtp !== Otp) {
+//       return res.json({ success: false, message: 'Invalid OTP' });
+//     }
+
+//     // Agar OTP expired ho gaya hai
+//     if (user.verifyOtpExpiresAt < Date.now()) {
+//       return res.json({ success: false, message: 'OTP Expired' });
+//     }
+
+//     // OTP verification successful, account ko verify kar rahe hain
+//     user.isAccountVerified = true; // Account ko verify kar rahe hain
+//     user.verifyOtp = ''; // OTP ko clear kar rahe hain
+//     user.verifyOtpExpiresAt = 0; // OTP expiration time ko reset kar rahe hain
+
+//     // User ko save kar rahe hain updated data ke saath
+//     await user.save();
+//     console.log('Received userId:', userId);
+//     console.log('Received OTP:', Otp);
+    
+//     // Response bhej rahe hain ki email successfully verify ho gaya
+//     return res.json({ success: true, message: 'Email verified successfully' });
+
+//   } catch (error) {
+//     return res.json({ success: false, message: error.message }); // Agar koi error aata hai to uska message bhej rahe hain
+//   }
+// }
+
 export const VerifiedEmail = async (req, res) => {
-  const { userId, Otp } = req.body; // Request body se userId aur OTP le rahe hain
-console.log(userId,Otp)
-  // Agar userId ya OTP missing hai to error message bhej rahe hain
-  if (!userId || !Otp) {
-    return res.json({ success: false, message: `Missing ID: ${userId} or Missing OTP: ${Otp} details` });
+  const { userId, Otp } = req.body;
+  console.log('Request Body:', req.body); // Log the whole request body to check if userId and OTP are received correctly
+
+  // Check if userId or OTP is missing
+  if (!userId && !Otp) {
+    return res.json({ success: false, message: 'Missing both userId and OTP' });
+  }
+
+  if (!userId) {
+    return res.json({ success: false, message: 'Missing userId' });
+  }
+
+  if (!Otp) {
+    return res.json({ success: false, message: 'Missing OTP' });
   }
 
   try {
-    const user = await userModel.findById(userId); // User ko database se find kar rahe hain userId ke through
+    const user = await userModel.findById(userId); // Find user by userId
+    console.log('User found:', user); // Log the user to verify it was retrieved correctly
 
-    // Agar user nahi milta to error bhej rahe hain
+    // If user is not found
     if (!user) {
       return res.json({ success: false, message: 'User Not Found' });
     }
 
-    // Agar user ka OTP blank hai ya jo OTP user ne diya hai wo sahi nahi hai
-    if (user.verifyOtp === '' || user.verifyOtp !== Otp) {
+    // Check OTP
+    console.log('Stored OTP:', user.verifyOtp); // Log stored OTP
+    console.log('Received OTP:', Otp); // Log received OTP
+
+    // If OTP is incorrect or empty
+    if (!user.verifyOtp || user.verifyOtp !== Otp) {
       return res.json({ success: false, message: 'Invalid OTP' });
     }
 
-    // Agar OTP expired ho gaya hai
+    // Check if OTP expired
+    console.log('OTP Expiration:', user.verifyOtpExpiresAt); // Log OTP expiration time
     if (user.verifyOtpExpiresAt < Date.now()) {
       return res.json({ success: false, message: 'OTP Expired' });
     }
 
-    // OTP verification successful, account ko verify kar rahe hain
-    user.isAccountVerified = true; // Account ko verify kar rahe hain
-    user.verifyOtp = ''; // OTP ko clear kar rahe hain
-    user.verifyOtpExpiresAt = 0; // OTP expiration time ko reset kar rahe hain
+    // OTP verification successful
+    user.isAccountVerified = true;
+    user.verifyOtp = '';
+    user.verifyOtpExpiresAt = 0;
 
-    // User ko save kar rahe hain updated data ke saath
+    // Save updated user data
     await user.save();
-    console.log('Received userId:', userId);
-    console.log('Received OTP:', Otp);
-    
-    // Response bhej rahe hain ki email successfully verify ho gaya
+    console.log('OTP verified successfully for userId:', userId);
+
+    // Send success response
     return res.json({ success: true, message: 'Email verified successfully' });
 
   } catch (error) {
-    return res.json({ success: false, message: error.message }); // Agar koi error aata hai to uska message bhej rahe hain
+    return res.json({ success: false, message: error.message });
   }
-}
+};
+
 
 // IS User Are Authenticated
 

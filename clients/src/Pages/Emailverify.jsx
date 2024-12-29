@@ -26,20 +26,14 @@ const Emailverify = () => {
   }
 
   const handlePaste = (e) => {
-    // Prevent the default paste behavior
-    e.preventDefault()
-
-    // Get the pasted value
-    const pastedValue = e.clipboardData.getData('Text')
-
-    // Only handle the paste if it's a valid 6-digit OTP
+    e.preventDefault();
+    const pastedValue = e.clipboardData.getData('Text');
     if (pastedValue.length === 6 && /^\d{6}$/.test(pastedValue)) {
-      // Fill each input with the corresponding digit from the pasted OTP
       pastedValue.split('').forEach((digit, index) => {
-        inputRef.current[index].value = digit
-      })
+        inputRef.current[index].value = digit;
+      });
     }
-  }
+  };
 
   const onSubmitHandler = async (e) => {
     try {
@@ -50,6 +44,7 @@ const Emailverify = () => {
       
       
         const { data } = await axios.post(backendUrl + '/api/auth/verify-account', { otp })
+        console.log(data)
         if (data.success) {
           toast.success(data.message)
           getUserData()
